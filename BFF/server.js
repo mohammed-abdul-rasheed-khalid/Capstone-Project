@@ -56,6 +56,10 @@ app.get("/auth/login", (req, res) => {
     maxAge: Date.now() + 15 * 60 * 1000,
   });
 
+
+
+  
+
   const params = new URLSearchParams({
     response_type: "code",
     client_id: CLIENT_ID,
@@ -108,6 +112,35 @@ app.get("/auth/logout", (req, res) => {
     res.clearCookie("sid", { path: "/" });
   }
   res.json({ ok: true });
+});
+
+// Refresh token endpoint
+app.post("/auth/refresh", async (req, res) => {
+  const sid = req.cookies.sid;
+  const session = tokenStore.get(sid);
+
+  if (!session || !session.refresh_token) {
+    return res.status(401).send("No refresh token");
+  }
+
+  try {
+    const data = {
+      grant_type: "refresh_token",
+      refresh_token: session.refresh_token,
+      client_id: CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+    };
+
+    const refresh = await axios.post(tokenEndpoint, stringify(data), {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+
+    tokenStore.set(sid, { ...session, ...refresh.data });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Token refresh error:", err.message);
+    res.status(401).send("Failed to refresh token");
+  }
 });
 
 app.get("/api/incidents", async (req, res) => {
@@ -187,6 +220,146 @@ app.delete("/api/incidents/:id", async (req, res) => {
         error: e.response.data || "Error deleting incident",
       });
     } else {
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+});
+
+// Create new incident
+app.post("/api/incidents", async (req, res) => {
+  const sid = req.cookies.sid;
+  const session = tokenStore.get(sid);
+
+  if (!session || !session.access_token) {
+    return res.status(401).send("Not authenticated");
+  }
+
+  try {
+    const response = await axios.post(
+      `${SN_INTANCE}/api/now/table/incident`,
+      req.body,
+      {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    res.json(response.data);
+  } catch (e) {
+    // Handle 401 by refreshing token and retrying
+    if (e.response && e.response.status === 401 && session.refresh_token) {
+      try {
+        const data = {
+          grant_type: "refresh_token",
+          refresh_token: session.refresh_token,
+          client_id: CLIENT_ID,
+          client_secret: CLIENT_SECRET,
+        };
+
+        const refresh = await axios.post(tokenEndpoint, stringify(data), {
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        });
+
+        tokenStore.set(sid, { ...session, ...refresh.data });
+
+        // Retry the POST request with new token
+        const retry = await axios.post(
+          `${SN_INTANCE}/api/now/table/incident`,
+          req.body,
+          {
+            headers: {
+              Authorization: `Bearer ${refresh.data.access_token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        res.json(retry.data);
+        return;
+      } catch (err) {
+        console.error("Token refresh failed:", err.message);
+        return res.status(401).send("Session Expired");
+      }
+    } else if (e.response) {
+      console.error("POST error:", e.response.status, e.response.data);
+      res.status(e.response.status).json({
+        error: e.response.data || "Error creating incident",
+      });
+    } else {
+      console.error("Server error:", e.message);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+});
+
+// Update existing incident
+app.patch("/api/incidents/:id", async (req, res) => {
+  const sid = req.cookies.sid;
+  const session = tokenStore.get(sid);
+
+  if (!session || !session.access_token) {
+    return res.status(401).send("Not authenticated");
+  }
+
+  const incidentId = req.params.id;
+
+  try {
+    const response = await axios.patch(
+      `${SN_INTANCE}/api/now/table/incident/${incidentId}`,
+      req.body,
+      {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    res.json(response.data);
+  } catch (e) {
+    // Handle 401 by refreshing token and retrying
+    if (e.response && e.response.status === 401 && session.refresh_token) {
+      try {
+        const data = {
+          grant_type: "refresh_token",
+          refresh_token: session.refresh_token,
+          client_id: CLIENT_ID,
+          client_secret: CLIENT_SECRET,
+        };
+
+        const refresh = await axios.post(tokenEndpoint, stringify(data), {
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        });
+
+        tokenStore.set(sid, { ...session, ...refresh.data });
+
+        // Retry the PATCH request with new token
+        const retry = await axios.patch(
+          `${SN_INTANCE}/api/now/table/incident/${incidentId}`,
+          req.body,
+          {
+            headers: {
+              Authorization: `Bearer ${refresh.data.access_token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        res.json(retry.data);
+        return;
+      } catch (err) {
+        console.error("Token refresh failed:", err.message);
+        return res.status(401).send("Session Expired");
+      }
+    } else if (e.response) {
+      console.error("PATCH error:", e.response.status, e.response.data);
+      res.status(e.response.status).json({
+        error: e.response.data || "Error updating incident",
+      });
+    } else {
+      console.error("Server error:", e.message);
       res.status(500).json({ error: "Server error" });
     }
   }
