@@ -21,7 +21,7 @@ export default function Home() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingIncident, setEditingIncident] = useState(null);
 
-  // 🆕 Add helper to calculate priority
+
   const calculatePriority = (impact, urgency) => {
     if (!impact || !urgency) return 3; // default
     const table = {
@@ -61,7 +61,7 @@ export default function Home() {
 
   const handleFormSubmit = async (formData) => {
     try {
-      // 🆕 calculate priority before sending
+      
       const calculatedPriority = calculatePriority(formData.impact, formData.urgency);
 
       if (editingIncident) {

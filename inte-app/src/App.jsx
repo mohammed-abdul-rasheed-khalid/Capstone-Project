@@ -95,9 +95,9 @@ function Layout() {
                 <Link style={navLinkStyle} to="/about">
                   About
                 </Link>
-                <Link style={navLinkStyle} to="/does-not-exist">
+                {/* <Link style={navLinkStyle} to="/does-not-exist">
                   404 Test
-                </Link>
+                </Link> */}
                 <Link style={navLinkStyle} onClick={logout}>
                   Logout
                 </Link>
