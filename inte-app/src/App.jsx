@@ -1,7 +1,7 @@
 import { AppBar, Toolbar, Typography, Container, Box, Button } from "@mui/material";
 import { Link, Routes, Route, Outlet } from "react-router-dom";
 import Home from "./Home.jsx";
-import About from "./about.jsx";
+import About from "./About.jsx";
 import NotFound from "./notfound.jsx";
 import { AuthContext } from "./AuthProvider.jsx";
 import { useContext, useState } from "react";
@@ -11,10 +11,10 @@ function Layout() {
   const [isDark, setIsDark] = useState(false);
 
   // Background and text color based on dark mode
-  document.body.style.background = isDark ? "#121212" : "#f9f9f9";
+  document.body.style.background = isDark ? "#221c1cff" : "rgba(188, 224, 242, 1)";
   document.body.style.color = isDark ? "#fff" : "#000";
 
-  // Reusable link style
+  
   const navLinkStyle = {
     color: "white",
     textDecoration: "none",
@@ -47,7 +47,7 @@ function Layout() {
         position="fixed"
         elevation={3}
         sx={{
-          background: isDark ? "#1f1f1f" : "rgb(3,45,66)",
+          background: isDark ? "#131415ff" : "rgb(3,45,66)",
           transition: "background 0.3s ease",
         }}
       >
@@ -59,7 +59,7 @@ function Layout() {
                 fontWeight: 700,
                 letterSpacing: 1.5,
                 textTransform: "uppercase",
-                fontFamily: "Poppins, sans-serif",
+                fontFamily: "fang-song",
               }}
             >
               Capstone
@@ -71,9 +71,9 @@ function Layout() {
               sx={{
                 borderColor: "white",
                 color: "white",
-                borderRadius: "30px",
+                borderRadius: "60px",
                 textTransform: "none",
-                fontSize: "0.9rem",
+                fontSize: "0.7rem",
                 paddingX: 2.5,
                 "&:hover": {
                   borderColor: "white",

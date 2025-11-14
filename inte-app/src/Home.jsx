@@ -99,7 +99,7 @@ export default function Home() {
         );
 
         const newIncident = response.data.result || response.data;
-        setIncidents([...incidents, newIncident]);
+        setIncidents([newIncident,...incidents ]);
       }
 
       setIsFormOpen(false);
@@ -131,7 +131,7 @@ export default function Home() {
         <>
           <Stack spacing={3}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="h5">Incident Records:</Typography>
+              <Typography variant="h4" sx={{ fontFamily: "FangSong", ml: 4 }} >Incident Records:</Typography>
               <Fab 
                 color="primary" 
                 aria-label="add"
@@ -154,7 +154,7 @@ export default function Home() {
                         Description: {inc.short_description}
                       </Typography>
 
-                      {/* 🆕 Added Impact and Urgency display */}
+                      {/* Added Impact and Urgency display */}
                       <Typography variant="body2">
                         Impact: {inc.impact?.display_value || inc.impact}
                       </Typography>
@@ -200,7 +200,7 @@ export default function Home() {
           />
         </>
       ) : (
-        <Typography>Please log in</Typography>
+        <Typography textAlign={"center"} variant="h5" sx={{ fontFamily: "FangSong"}}>Please Log In To Continue...</Typography>
       )}
     </>
   );
